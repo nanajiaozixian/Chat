@@ -16,7 +16,7 @@ public class ChatClient extends Frame {
 		add(tfTxt, BorderLayout.SOUTH);
 		add(taContent, BorderLayout.NORTH);
 		pack();
-		setVisible(true);	
+			
 		this.addWindowListener(new WindowAdapter(){
 			
 			public void windowClosing(WindowEvent e){
@@ -24,5 +24,20 @@ public class ChatClient extends Frame {
 			}
 			
 		});
+		
+		tfTxt.addActionListener(new TFListener());
+		setVisible(true);
+	}
+	
+	private class TFListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String strInput = tfTxt.getText().trim();
+			taContent.setText(strInput);
+			tfTxt.setText("");
+			
+		}
+		
 	}
 }
