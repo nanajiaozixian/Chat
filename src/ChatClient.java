@@ -8,8 +8,10 @@ public class ChatClient extends Frame {
 	
 	Socket s = null;
 	DataOutputStream dos = null;
+	DataInputStream dis = null;
 	TextField tfTxt = new TextField();
 	TextArea taContent = new TextArea();
+	boolean bConnected = false;
 	
 	public static void main(String[] args) {
 		new ChatClient().launchFrame();
@@ -24,6 +26,7 @@ public class ChatClient extends Frame {
 		this.addWindowListener(new WindowAdapter(){
 			
 			public void windowClosing(WindowEvent e){
+				disconnect();
 				System.exit(0);
 			}
 			
@@ -32,6 +35,36 @@ public class ChatClient extends Frame {
 		tfTxt.addActionListener(new TFListener());
 		setVisible(true);
 		connect();
+		readInput();
+		
+	}
+	
+	
+	
+	public void connect(){
+		try{
+			s = new Socket("127.0.0.1", 8899);
+			bConnected = true;
+			dos = new DataOutputStream(s.getOutputStream());
+			dis = new DataInputStream(s.getInputStream());
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	
+	}
+	
+	public void disconnect(){
+		try {
+			bConnected = false;
+			dos.close();
+			dis.close();
+			s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch(NullPointerException e){
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -42,34 +75,41 @@ public class ChatClient extends Frame {
 			String strInput = tfTxt.getText().trim();	
 			//send data to server
 			try{
-				dos = new DataOutputStream(s.getOutputStream());
+				
 				dos.writeUTF(strInput);
 				dos.flush();
-				taContent.setText(strInput);
 				tfTxt.setText("");
+				
 			}catch(IOException e_io){
 				e_io.printStackTrace();
 			}
 		}
 		
 	}
-	
-	public void connect(){
-		try{
-			s = new Socket("127.0.0.1", 8888);
-		}catch(IOException e){
-			e.printStackTrace();
-		}
-	
+
+	public void readInput() {
+		ReadInputThread ri = new ReadInputThread();
+		Thread riThread = new Thread(ri);
+		riThread.start();
 	}
-	
-	public void disconnect(){
-		try {
-			dos.close();
-			s.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	class ReadInputThread implements Runnable {
+
+		@Override
+		public void run() {
+			try {
+				
+				while(bConnected){
+					String str = dis.readUTF();		
+					taContent.setText(taContent.getText() +str+"\n");
+				}
+			} catch(SocketException e){
+				System.out.println("Log out! Bye!");
+			}catch (IOException e1) {
+			
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 		}
 		
 	}
